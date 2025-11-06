@@ -2,7 +2,7 @@
 Pronounced: *(CR-enroll)*</br></br>
 
 A general enrollment manager script for ChromeOS</br>
-I'm going to actively maintain this with the latest avaliable unenrollment* too, and be adding more features whenever I can.</br>
+I'm going to actively maintain this with the latest public unenrollment* too, and be adding more features whenever I can.</br>
 **shim only*
 </br>
 

@@ -67,7 +67,7 @@ if [[ "${options[$selected_index]}" == "Save Current Enrollment Keys" ]]; then
     sleep 0.3
     vpd -i RW_VPD -s "saved_"$KEYNAME"_serial_number"="$SERIAL"
     sleep 0.3
-    echo -e "Keys written to VPD! (if WP was enabled)"
+    echo -e "Keys written to VPD!"
     sleep 0.8
     else
     echo -e "Declined!"

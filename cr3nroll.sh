@@ -8,7 +8,6 @@ factoryserial=$(vpd -i RO_VPD -g "factory_serial_number")
 if [[ "$factoryserial" == "" ]]; then
 factorysaved="1"
 fi
-
 # TODO:
 # * Add factory backup stuff (done)
 # * Migrate to RW_VPD (done)
@@ -26,9 +25,13 @@ D='\033[1;90m'
 
 menu_reset() {
 if [[ "$factorysaved" == "1" ]]; then
-options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "Import Custom Enrollment Info (WIP)" "Edit Enrollment list (WIP)" "${B}Backup Enrollment Info${N}" "Restore Enrollment Info (WIP)" "${G}Backup Factory Enrollment Info (Recommended)${N}" "Exit")
+options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "Import Custom Enrollment Info (WIP)" "Edit Enrollment list (WIP)" "${B}Backup Enrollment Info${N}" "Restore Enrollment Info (WIP)" "${G}Backup Factory Enrollment Info (Recommended)${N}" "Disable Enrollment (Quicksilver)" "Exit")
 else
-options=("${B}Save Current Enrollment Keys${N}" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "Import Custom Enrollment Info (WIP)" "Edit Enrollment list (WIP)" "${B}Backup Enrollment Info${N}" "Restore Enrollment Info (WIP)" "Exit")
+options=("${B}Save Current Enrollment Keys${N}" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "Import Custom Enrollment Info (WIP)" "Edit Enrollment list (WIP)" "${B}Backup Enrollment Info${N}" "Restore Enrollment Info (WIP)" "Disable Enrollment (Quicksilver)" "Exit")
+fi
+
+if [[ "$(vpd -i RW_VPD -g "re_enrollment_key")" != "" ]]; then
+options=("Remove Quicksilver${N}")
 fi
 num_options=${#options[@]}
 }
@@ -93,6 +96,31 @@ if [[ "${options[$selected_index]}" == "Save Current Enrollment Keys" ]]; then
     sleep 0.4
     menu_reset
     full_menu
+fi
+if [[ "${options[$selected_index]}" == "Remove Quicksilver${N}" ]]; then
+vpd -i RW_VPD -d "re_enrollment_key"
+echo -e "Removed Quicksilver! Returning to menu..."
+sleep 2.6
+menu_reset
+full_menu
+fi
+if [[ "${options[$selected_index]}" == "Disable Enrollment (Quicksilver)" ]]; then
+menu_logo
+echo -e "Disable Enrollment"
+echo ""
+echo -e "\n${R}Warning: This will prevent editing enrollment configs and enrolling until Quicksilver is removed.)\n${N}"
+                    read -r -n 2 -s -p "Double click Y to continue, or hold any other key to exit..." confirmation
+                    if [[ "$confirmation" != "yy" ]]; then
+                    menu_reset
+                    full_menu
+                    fi
+echo -e "\nDisabling Enrollment..."
+sleep 1
+vpd -i RW_VPD -s "re_enrollment_key"="$(openssl rand -hex 32)"
+echo -e "Done! Returning to menu..."
+sleep 2
+menu_reset
+full_menu
 fi
 if [[ "${options[$selected_index]}" == "${B}Backup Enrollment Info${N}" ]]; then
 menu_logo

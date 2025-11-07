@@ -396,17 +396,9 @@ sleep 1
                     ;;
             esac
         done
-    # fi
-
-
-
-
-
-   
+    # fi   
 fi
 }
-
-
 full_menu() {
 clear
 tput civis

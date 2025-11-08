@@ -25,20 +25,33 @@ D='\033[1;90m'
 
 menu_reset() {
 if [[ "$factorysaved" == "1" ]]; then
-options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "Import Custom Enrollment Info (WIP)" "Edit Enrollment list (WIP)" "${B}Backup Enrollment Info${N}" "Restore Enrollment Info (WIP)" "${G}Backup Factory Enrollment Info (Recommended)${N}" "Disable Enrollment (Quicksilver)" "Exit")
+options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "${D}Import Custom Enrollment Info (WIP)${N}" "${D}Edit Enrollment list (WIP)${N}" "${B}Backup Enrollment Info${N}" "${D}Restore Enrollment Info (WIP)${N}" "${G}Backup Factory Enrollment Info (Recommended)${N}" "Disable Enrollment (Quicksilver)" "Exit")
 else
-options=("${B}Save Current Enrollment Keys${N}" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "Import Custom Enrollment Info (WIP)" "Edit Enrollment list (WIP)" "${B}Backup Enrollment Info${N}" "Restore Enrollment Info (WIP)" "Disable Enrollment (Quicksilver)" "Exit")
+options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "${D}Import Custom Enrollment Info (WIP)${N}" "${D}Edit Enrollment list (WIP)${N}" "${B}Backup Enrollment Info${N}" "${D}Restore Enrollment Info (WIP)${N}" "Disable Enrollment (Quicksilver)" "Exit")
 fi
-
 if [[ "$(vpd -i RW_VPD -g "re_enrollment_key")" != "" ]]; then
 options=("Remove Quicksilver${N}")
 fi
 num_options=${#options[@]}
+
 }
+
 menu_reset
 
 selector() {
 clear
+if [[ "${options[$selected_index]}" == "${D}Edit Enrollment list (WIP)${N}" ]]; then
+menu_reset
+full_menu
+fi
+if [[ "${options[$selected_index]}" == "${D}Import Custom Enrollment Info (WIP)${N}" ]]; then
+menu_reset
+full_menu
+fi
+if [[ "${options[$selected_index]}" == "${D}Restore Enrollment Info (WIP)${N}" ]]; then
+menu_reset
+full_menu
+fi
 if [[ "${options[$selected_index]}" == "Exit" ]]; then
     echo "Exiting."
     sleep 0.5

@@ -241,10 +241,18 @@ if [[ "${options[$selected_index]}" == "Generate new Enrollment Keys" ]]; then
     gensdev=$(openssl rand -hex 32)
     echo -e "Generated stable_device_secret: '$gensdev'"
     sleep 0.4
-    echo -e "Would you like to have your serial number auto-generated? (Y/N)"
+    echo -e "Would you like to have your serial number auto-generated, or make one yourself? (Y/N) [Y = Auto, N = Manual]"
     read -r -n 1 -p "(y/n):" snauto
     if [[ "${snauto}" == "y" ]]; then
-    KEYNAME="$(tr -dc 'A-Z' </dev/urandom | head -c2; tr -dc '0-9' </dev/urandom | head -c1; tr -dc 'A-Z' </dev/urandom | head -c3; tr -dc 'A-Z0-9' </dev/urandom | head -c3; echo)"
+    # super mega cool serial number generator that i made myself 
+    # (google pls dont sue me i made this based on structure ive seen in SOME serial numbers)
+    KEYNAME="$(
+    LC_ALL=C printf '%s' \
+        "$(openssl rand -base64 8 | tr -dc 'A-Z' | head -c2)" \
+        "$(openssl rand -base64 8 | tr -dc '0-9' | head -c1)" \
+        "$(openssl rand -base64 8 | tr -dc 'A-Z' | head -c3)" \
+        "$(openssl rand -base64 8 | tr -dc 'A-Z0-9' | head -c3)"
+    )"   
     echo -e "Setting serial number to '$KEYNAME'"
     else
     echo -e "What do you want your serial number to be?"

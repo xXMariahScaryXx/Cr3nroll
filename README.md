@@ -1,5 +1,5 @@
 # Cr3nroll
-Pronounced: *(Cren-roll)*</br></br>
+Pronounced: *(cr-enroll)*</br></br>
 
 A general enrollment manager script for ChromeOS</br>
 I'm going to actively maintain this with the latest public unenrollment too, and be adding more features whenever I can.</br>

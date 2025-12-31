@@ -11,7 +11,7 @@ fi
 # TODO:
 # * Add factory backup stuff (done)
 # * Migrate to RW_VPD (done)
-# * finish the empty options (5/7 done)
+# * finish the empty options (6/7 done)
 
 
 
@@ -25,9 +25,9 @@ D='\033[1;90m'
 
 menu_reset() {
 if [[ "$factorysaved" == "1" ]]; then
-options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "${D}Import Custom Enrollment Info (WIP)${N}" "${D}Edit Enrollment list (WIP)${N}" "${B}Backup Enrollment Info${N}" "${D}Restore Enrollment Info (WIP)${N}" "${G}Backup Factory Enrollment Info (Recommended)${N}" "Disable Enrollment (Quicksilver)" "Exit")
+options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "${D}Import Custom Enrollment Info (WIP)${N}" "${D}Edit Enrollment list${N}" "${B}Backup Enrollment Info${N}" "${D}Restore Enrollment Info (WIP)${N}" "${G}Backup Factory Enrollment Info (Recommended)${N}" "Disable Enrollment (Quicksilver)" "Exit")
 else
-options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "${D}Import Custom Enrollment Info (WIP)${N}" "${D}Edit Enrollment list (WIP)${N}" "${B}Backup Enrollment Info${N}" "${D}Restore Enrollment Info (WIP)${N}" "Disable Enrollment (Quicksilver)" "Exit")
+options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "${D}Import Custom Enrollment Info (WIP)${N}" "${D}Edit Enrollment list${N}" "${B}Backup Enrollment Info${N}" "${D}Restore Enrollment Info (WIP)${N}" "Disable Enrollment (Quicksilver)" "Exit")
 fi
 if [[ "$(vpd -i RW_VPD -g "re_enrollment_key")" != "" ]]; then
 options=("Remove Quicksilver${N}")
@@ -40,9 +40,103 @@ menu_reset
 
 selector() {
 clear
-if [[ "${options[$selected_index]}" == "${D}Edit Enrollment list (WIP)${N}" ]]; then
-menu_reset
-full_menu
+if [[ "${options[$selected_index]}" == "${D}Edit Enrollment list${N}" ]]; then
+   clear
+    menu_logo
+    echo -e "Getting keys..."
+    sleep 2
+    mapfile -t KEYNAMES < <(vpd -i RW_VPD -l | grep '"saved_' | awk -F'[ =]' '{print $1}' | awk -F_ '{print $2}' | sort -u)
+#   mapfile -t KEYNAMES < <(echo -e "saved_test" "saved_test_serial" | grep '^saved_' | awk -F'[ =]' '{print $1}' | awk -F_ '{print $2}' | sort -u)
+    echo ""
+    echo ""
+    echo -e "\nCurrently active serial number: '$(vpd -i RO_VPD -g "serial_number")'"
+    echo ""
+    sleep 1
+     if [[ ${#KEYNAMES[@]} -eq 0 ]]; then
+        echo -e "No Keys found!"
+        sleep 2
+        clear
+        menu_reset
+        full_menu
+    else
+        options=("-- RETURN TO MENU --" ${KEYNAMES[@]})
+        num_options=${#options[@]}
+
+        PS3=$'\nSelection: '
+        select key in "${options[@]}"; do
+            case "$key" in
+                "-- RETURN TO MENU --")
+                    menu_reset
+                    full_menu
+                    ;;
+                "")
+                    echo "Invalid selection, try again."
+                    ;;
+                *)
+                    echo -e "(Selected '$key')"
+                    echo -e "\n${R}Warning: Setting your enrollment keys is highly destructive, I recommend saving your factory ones before you select any keys.${N}\n\n(This script will attempt to back them up automatically if you haven't, but I still highly recommend doing it manually)\n"
+                    read -r -n 2 -s -p "Double click Y to continue, or hold any other key to exit..." confirmation
+                    if [[ "$confirmation" != "yy" ]]; then
+                    menu_reset
+                    full_menu
+                    fi
+                    clear
+                    menu_logo
+                    
+                    if [[ "$(vpd -i RO_VPD -g "factory_stable_device_secret")" == "" ]]; then
+                    vpd -i RO_VPD -s "factory_stable_device_secret"="$(vpd -i RO_VPD -g "stable_device_secret_DO_NOT_SHARE")"
+                    echo -e "if you see this that means that you don't have your factory SDS (stable_device_secret) backed up, It will be backed up in the next step."
+                    else
+                    echo -e "Found valid factory entry (SDS)!"
+                    fi
+                    if [[ "$(vpd -i RO_VPD -g "factory_serial_number")" == "" ]]; then
+                    vpd -i RO_VPD -s "factory_serial_number"="$(vpd -i RO_VPD -g "serial_number")"
+                    echo -e "if you see this that means that you don't have your factory SN backed up, It will be backed up in the next step."
+                    else
+                    echo -e "Found valid factory entry (SN)!"
+                    fi
+                    sleep 3.4
+                     overrideSet() {
+        clear
+    trap 'echo -e "\nErase cancelled, no keys were deleted!" && sleep 2 && menu_reset && full_menu ' SIGINT
+    echo -e "Writing selected keys to RO_VPD in 3 seconds, press CTRL-C to cancel if you change your mind. ${R}THIS IS HIGHLY DESTRUCTIVE!!${N}"
+    sleep 1.5
+    clear
+           echo -e "Erasing selected keys from RW_VPD in 3 seconds, press CTRL-C to cancel if you change your mind. ${R}THIS IS HIGHLY DESTRUCTIVE!!${N}"
+    echo -e "Erasing in: 3"
+    sleep 1.5
+        clear
+            echo -e "Erasing selected keys from RW_VPD in 3 seconds, press CTRL-C to cancel if you change your mind. ${R}THIS IS HIGHLY DESTRUCTIVE!!${N}"
+    echo -e "Erasing in: 2"
+    sleep 1.5
+        clear
+           echo -e "Erasing selected keys from RW_VPD in 3 seconds, press CTRL-C to cancel if you change your mind. ${R}THIS IS HIGHLY DESTRUCTIVE!!${N}"
+    echo -e "Erasing  in: 1"
+    sleep 2
+        clear
+        
+            echo -e "Writing selected keys to RO_VPD in 3 seconds, press CTRL-C to cancel if you change your mind. ${R}THIS IS HIGHLY DESTRUCTIVE!!${N}"
+    echo -e "${R}Writing keys...${N}"
+    sleep 0.8
+            clear
+            menu_logo
+echo -e "Erasing selected keys from RW_VPD..."
+    sleep 1.7
+    vpd -i RW_VPD -d "saved_${key}_serial_number"
+    vpd -i RW_VPD -d "saved_${key}_stable_device_secret"
+    sleep 0.5
+    echo -e "Keys erased from RW_VPD successfully!"
+    sleep 2
+    menu_reset
+    full_menu
+}
+                    overrideSet
+                    menu_reset
+                    full_menu
+                    ;;
+            esac
+        done
+     fi   
 fi
 if [[ "${options[$selected_index]}" == "${D}Import Custom Enrollment Info (WIP)${N}" ]]; then
 menu_reset

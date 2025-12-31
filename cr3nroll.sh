@@ -8,12 +8,6 @@ factoryserial=$(vpd -i RO_VPD -g "factory_serial_number")
 if [[ "$factoryserial" == "" ]]; then
 factorysaved="1"
 fi
-# TODO:
-# * Add factory backup stuff (done)
-# * Migrate to RW_VPD (done)
-# * finish the empty options (6/7 done)
-
-
 
 # colors that i totally didn't steal from a previous project
 B='\033[1;36m' 
@@ -25,9 +19,9 @@ D='\033[1;90m'
 
 menu_reset() {
 if [[ "$factorysaved" == "1" ]]; then
-options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "${D}Import Custom Enrollment Info (WIP)${N}" "${D}Edit Enrollment list${N}" "${B}Backup Enrollment Info${N}" "${D}Restore Enrollment Info (WIP)${N}" "${G}Backup Factory Enrollment Info (Recommended)${N}" "Disable Enrollment (Quicksilver)" "Exit")
+options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "${D}Import Custom Enrollment Info${N}" "${N}Edit Enrollment list${N}" "${B}Backup Enrollment Info${N}" "${R}Restore Enrollment Info${N}" "${G}Backup Factory Enrollment Info (Recommended)${N}" "Disable Enrollment (Quicksilver)" "Exit")
 else
-options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "${D}Import Custom Enrollment Info (WIP)${N}" "${D}Edit Enrollment list${N}" "${B}Backup Enrollment Info${N}" "${D}Restore Enrollment Info (WIP)${N}" "Disable Enrollment (Quicksilver)" "Exit")
+options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "${D}Import Custom Enrollment Info${N}" "${N}Edit Enrollment list${N}" "${B}Backup Enrollment Info${N}" "${R}Restore Enrollment Info${N}" "Disable Enrollment (Quicksilver)" "Exit")
 fi
 if [[ "$(vpd -i RW_VPD -g "re_enrollment_key")" != "" ]]; then
 options=("Remove Quicksilver${N}")
@@ -138,11 +132,55 @@ echo -e "Erasing selected keys from RW_VPD..."
         done
      fi   
 fi
-if [[ "${options[$selected_index]}" == "${D}Import Custom Enrollment Info (WIP)${N}" ]]; then
+if [[ "${options[$selected_index]}" == "${N}Import Custom Enrollment Info${N}" ]]; then
+clear
+menu_logo
+echo -e "Import Custom Enrollment Info"
+echo ""
+echo -e "\n\nEnter file path to import from (.vpd):"
+echo -ne "File: "
+read importfile
+if [[ -f "$importfile" ]]; then
+echo -e "Importing from file '$importfile'..."
+STABLEDEV=$(grep "stable_device_secret_DO_NOT_SHARE" "$importfile" | awk -F'= ' '{print $2}')
+SERIAL=$(grep "serial_number" "$importfile" | awk -F'= ' '{print $2}')
+sleep 0.67
+echo -e "Read stable_device_secret and serial_number!"
+sleep 0.4
+echo -e "Writing to VPD..."
+vpd -i RO_VPD -s "stable_device_secret_DO_NOT_SHARE"="$STABLEDEV"
+sleep 0.4
+vpd -i RO_VPD -s "serial_number"="$SERIAL"
+sleep 0.4
+echo -e "Written to VPD successfully! Returning to menu..."
+sleep 1
+menu_reset
+full_menu
+else
+echo -e "File not found! Returning to menu..."
+sleep 1.2
 menu_reset
 full_menu
 fi
-if [[ "${options[$selected_index]}" == "${D}Restore Enrollment Info (WIP)${N}" ]]; then
+fi
+if [[ "${options[$selected_index]}" == "${R}Restore Enrollment Info${N}" ]]; then
+echo -e "Are you sure you want to restore saved enrollment keys from factory? This will overwrite your currently active keys."
+echo -ne "(Y/N): "
+read YESNT3
+if [[ ${YESNT3,,} = "y" ]]; then
+if [[ "$(vpd -i RO_VPD -g "factory_stable_device_secret")" == "$(vpd -i RO_VPD -g "stable_device_secret_DO_NOT_SHARE")" ]]; then
+echo -e "You are already using your factory enrollment keys :P\n\n Returning to menu..."
+sleep 2
+menu_reset
+full_menu
+fi
+echo -e "Restoring factory enrollment keys..."
+sleep 1
+vpd -i RO_VPD -s "stable_device_secret_DO_NOT_SHARE"="$(vpd -i RO_VPD -g "factory_stable_device_secret")"
+sleep 0.4
+vpd -i RO_VPD -s "serial_number"="$(vpd -i RO_VPD -g "factory_serial_number")"
+sleep 0.4
+echo -e "Restored enrollment keys successfully! Returning to menu..."
 menu_reset
 full_menu
 fi

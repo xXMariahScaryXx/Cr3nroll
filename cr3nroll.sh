@@ -123,7 +123,7 @@ echo -e "Erasing selected keys from RW_VPD..."
     sleep 2
     menu_reset
     full_menu
-}
+                     }
                     overrideSet
                     menu_reset
                     full_menu
@@ -173,6 +173,7 @@ echo -e "You are already using your factory enrollment keys :P\n\n Returning to 
 sleep 2
 menu_reset
 full_menu
+fi
 fi
 echo -e "Restoring factory enrollment keys..."
 sleep 1
@@ -579,7 +580,7 @@ sleep 1
     sleep 4
     menu_reset
     full_menu
-}
+                     }
                     overrideSet
                     menu_reset
                     full_menu

@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# CUSTOM FLAGS
+BROKER_PATH="broker.sh" # if you put broker in another spot, put the path here :3
+BROKER_ENABLED="true" # enable or disable launching br0ker for supported versions
+# MAIN SCRIPT 
+
+
 tput civis
 
 selected_index=0
@@ -19,9 +25,9 @@ D='\033[1;90m'
 
 menu_reset() {
 if [[ "$factorysaved" == "1" ]]; then
-options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "${D}Import Custom Enrollment Info${N}" "${N}Edit Enrollment list${N}" "${B}Backup Enrollment Info${N}" "${R}Restore Enrollment Info${N}" "${G}Backup Factory Enrollment Info (Recommended)${N}" "Disable Enrollment (Quicksilver)" "Exit")
+options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "Import Custom Enrollment Info${N}" "Edit Enrollment list${N}" "${B}Backup Enrollment Info${N}" "${R}Restore Enrollment Info${N}" "${G}Backup Factory Enrollment Info (Recommended)${N}" "Deprovision/Unenroll" "Exit")
 else
-options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "${D}Import Custom Enrollment Info${N}" "${N}Edit Enrollment list${N}" "${B}Backup Enrollment Info${N}" "${R}Restore Enrollment Info${N}" "Disable Enrollment (Quicksilver)" "Exit")
+options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "Import Custom Enrollment Info${N}" "Edit Enrollment list${N}" "${B}Backup Enrollment Info${N}" "${R}Restore Enrollment Info${N}" "Deprovision/Unenroll" "Exit")
 fi
 if [[ "$(vpd -i RW_VPD -g "re_enrollment_key")" != "" ]]; then
 options=("Remove Quicksilver${N}")
@@ -34,7 +40,7 @@ menu_reset
 
 selector() {
 clear
-if [[ "${options[$selected_index]}" == "${D}Edit Enrollment list${N}" ]]; then
+if [[ "${options[$selected_index]}" == "Edit Enrollment list${N}" ]]; then
    clear
     menu_logo
     echo -e "Getting keys..."
@@ -132,28 +138,35 @@ echo -e "Erasing selected keys from RW_VPD..."
         done
      fi   
 fi
-if [[ "${options[$selected_index]}" == "${N}Import Custom Enrollment Info${N}" ]]; then
+if [[ "${options[$selected_index]}" == "Import Custom Enrollment Info${N}" ]]; then
 clear
 menu_logo
-echo -e "Import Custom Enrollment Info"
+echo -e "Import Custom Enrollment Info (from a file)"
+echo -e "${R}THIS WILL OVERWRITE YOUR ENTIRE VPD WITH THE CONTENTS OF THE FILES YOU PROVIDE!!${N}"
 echo ""
-echo -e "\n\nEnter file path to import from (.vpd):"
-echo -ne "File: "
-read importfile
-if [[ -f "$importfile" ]]; then
-echo -e "Importing from file '$importfile'..."
-STABLEDEV=$(grep "stable_device_secret_DO_NOT_SHARE" "$importfile" | awk -F'= ' '{print $2}')
-SERIAL=$(grep "serial_number" "$importfile" | awk -F'= ' '{print $2}')
+echo -e "\n\nEnter directory to import from (must contain RO.vpd and RW.vpd):"
+echo -ne "Directory: "
+read impdirec
 sleep 0.67
-echo -e "Read stable_device_secret and serial_number!"
-sleep 0.4
-echo -e "Writing to VPD..."
-vpd -i RO_VPD -s "stable_device_secret_DO_NOT_SHARE"="$STABLEDEV"
-sleep 0.4
-vpd -i RO_VPD -s "serial_number"="$SERIAL"
-sleep 0.4
-echo -e "Written to VPD successfully! Returning to menu..."
+if [[ -d "$impdirec" ]]; then
+if [[ -f "$impdirec/RO.vpd" ]] && [[ -f "$impdirec/RW.vpd" ]]; then
+echo -e "Importing VPD from '$impdirec/RO.vpd' and '$impdirec/RW.vpd'..."
+
+sudo vpd -i RW_VPD -l > RW_backup.txt # this is to make sure you can recover if my sh1tty script fucks up
+sudo vpd -i RO_VPD -l > RO_backup.txt
 sleep 1
+echo -e "Importing RW_VPD..."
+sudo vpd -i RW_VPD -O
+while IFS= read -r line; do
+    sudo vpd -i RW_VPD -s "$line"
+done < "$impdirec/RW.vpd"
+echo -e "Imported RW_VPD!"
+sleep 3
+echo -e "Importing RO_VPD..."
+sudo vpd -i RO_VPD -O
+while IFS= read -r line; do
+    sudo vpd -i RO_VPD -s "$line"
+done < "$impdirec/RO.vpd"
 menu_reset
 full_menu
 else
@@ -163,11 +176,12 @@ menu_reset
 full_menu
 fi
 fi
+fi
 if [[ "${options[$selected_index]}" == "${R}Restore Enrollment Info${N}" ]]; then
 echo -e "Are you sure you want to restore saved enrollment keys from factory? This will overwrite your currently active keys."
 echo -ne "(Y/N): "
 read YESNT3
-if [[ ${YESNT3,,} = "y" ]]; then
+if [[ "${YESNT3}" = [Yy] ]]; then
 if [[ "$(vpd -i RO_VPD -g "factory_stable_device_secret")" == "$(vpd -i RO_VPD -g "stable_device_secret_DO_NOT_SHARE")" ]]; then
 echo -e "You are already using your factory enrollment keys :P\n\n Returning to menu..."
 sleep 2
@@ -226,7 +240,7 @@ if [[ "${options[$selected_index]}" == "Save Current Enrollment Keys" ]]; then
     echo -e "Are you sure you want to save the key under the name '$KEYNAME' for the serial number '$SERIAL'?"
     echo -ne "(Y/N): "
     read YESNT
-    if [[ ${YESNT,,} = "y" ]]; then
+    if [[ "${YESNT}" = [Yy] ]]; then
     echo -e "Saving keys (to RW_VPD)..."
     vpd -i RW_VPD -s "saved_"$KEYNAME"_stable_device_secret"="$STABLEDEV"
     sleep 0.3
@@ -250,11 +264,51 @@ sleep 2.6
 menu_reset
 full_menu
 fi
-if [[ "${options[$selected_index]}" == "Disable Enrollment (Quicksilver)" ]]; then
+if [[ "${options[$selected_index]}" == "Deprovision/Unenroll" ]]; then
 menu_logo
-echo -e "Disable Enrollment"
+echo -e "Disable Enrollment (Deprovision/Unenroll)"
+echo -e "Getting version milestone..."
+MILESTONE=$(cat /etc/lsb-release | grep MILESTONE | sed 's/^.*=//' )
+# MILESTONE=120 # for testing
+# BROKER_ENABLED="false" # also for testing
+sleep 0.67
+if [[ "$MILESTONE" == "" ]]; then
+echo -e "${R}Could not get milestone version, is ChromeOS installed?${N}"
+sleep 2.6
+echo -e "Returning to menu..."
+menu_reset
+full_menu
+fi
+echo -e "ChromeOS milestone: R$MILESTONE"
+
+if [[ "$MILESTONE" -le 111 ]]; then
+echo -e "Why are you using Cr3nroll on R$MILESTONE q-q"
+echo -e "Disabling Enrollment (R111 and below [CHECK_ENROLLMENT=0])..."
+vpd -i RW_VPD -s "block_devmode"="0"
+vpd -i RW_VPD -s "check_enrollment"="0"
+sleep 4
+menu_reset
+full_menu
+else
+if [[ "$MILESTONE" -ge 143 ]]; then
+echo -e "\n${R}Sorry, no unenrollment found for your version (yet), try downgrading if you can!${N}"
+sleep 0.67
+echo -e "Returning to menu..."
+sleep 3.5
+else
+if [[ "$MILESTONE" -ge 106 && "$MILESTONE" -le 132 ]]; then
+echo -e "Your version supports Br0ker, launching it now!"
+if [[ "$BROKER_ENABLED" == "true" ]]; then
+exec bash "$BROKER_PATH"
+else
+sleep 0.67
+echo -e "${R}Sorry, Br0ker support is disabled, checking for Quicksilver instead...${N}"
+sleep 2.6
+if [[ "$MILESTONE" -ge 125 ]]; then
+echo -e "\nYour version supports ${G}Quicksilver${N}! (you are using R$MILESTONE, which supports Br0ker, but it is disabled.)"
 echo ""
-echo -e "\n${R}Warning: This will prevent editing enrollment configs and enrolling until Quicksilver is removed.)\n${N}"
+echo -e "\n${R}Warning: This will prevent editing enrollment configs and enrolling until Quicksilver is removed.) [ONLY WORKS BELOW R143]\n${N}"
+echo -e "If you powerwash after updating past R142 you will be re-enrolled!"
                     read -r -n 2 -s -p "Double click Y to continue, or hold any other key to exit..." confirmation
                     if [[ "$confirmation" != "yy" ]]; then
                     menu_reset
@@ -265,6 +319,35 @@ sleep 1
 vpd -i RW_VPD -s "re_enrollment_key"="$(openssl rand -hex 32)"
 echo -e "Done! Returning to menu..."
 sleep 2
+menu_reset
+full_menu
+else
+echo -e "${R}Your version is too low to be unenrolled without Br0ker, and it has been disabled.${N}\nReturning to menu..."
+sleep 3.2
+fi
+fi
+else
+if [[ "$MILESTONE" -ge 133 ]]; then
+echo -e "\nYour version supports ${G}Quicksilver${N}!"
+echo ""
+echo -e "\n${R}Warning: This will prevent editing enrollment configs and enrolling until Quicksilver is removed.) [ONLY WORKS BELOW R143]\n${N}"
+echo -e "If you powerwash after updating past R142 you will be re-enrolled!"
+                    read -r -n 2 -s -p "Double click Y to continue, or hold any other key to exit..." confirmation
+                    if [[ "$confirmation" != "yy" ]]; then
+                    menu_reset
+                    full_menu
+                    fi
+echo -e "\nDisabling Enrollment..."
+sleep 1
+vpd -i RW_VPD -s "re_enrollment_key"="$(openssl rand -hex 32)"
+echo -e "Done! Returning to menu..."
+sleep 2
+menu_reset
+full_menu
+fi
+fi
+fi
+fi
 menu_reset
 full_menu
 fi
@@ -366,7 +449,7 @@ if [[ "${options[$selected_index]}" == "Generate new Enrollment Keys" ]]; then
     tput cnorm
     echo -ne "(Y/N): "
     read YESNT2
-    if [[ ${YESNT2,,} = "y" ]]; then
+    if [[ "${YESNT2}" = [Yy] ]]; then
     sleep 0.67
     echo -e "Generating new Keys..."
     sleep 0.4
@@ -412,7 +495,7 @@ if [[ "${options[$selected_index]}" == "Generate new Enrollment Keys" ]]; then
     echo -ne "(Y/N): "
     read SCONFIRM
     fi
-    if [[ ${SCONFIRM,,} = "y" ]]; then
+    if [[ "${SCONFIRM}" = [Yy] ]]; then
     echo -e "What would you like to name these keys? (NO SPACES)"
     SKNAME() {
     echo -ne "Name: "
@@ -599,7 +682,7 @@ while true; do
     read -rsn1 key
 
     if [[ "$key" == $'\x1b' ]]; then
-        read -rsn2 -t 0.01 keyseq
+        read -rsn2 -t 1 keyseq
         case "$keyseq" in
             '[A')
                 selected_index=$(( (selected_index - 1 + num_options) % num_options ))
@@ -639,12 +722,12 @@ if [[ "$writeprotect" == *"disabled"* ]]; then
 fi
 echo ""
 for i in "${!options[@]}"; do
-        if [[ $i -eq $selected_index ]]; then
-            echo -e "\e[7m > ${options[$i]} \e[0m"
-        else
-            echo -e "   ${options[$i]}      "
-        fi
-    done
+    if [[ $i -eq $selected_index ]]; then
+        printf "\e[7m > ${options[$i]} \e[0m\n"
+    else
+        printf "   ${options[$i]}      \n"
+    fi
+done
 }
 clear
 full_menu

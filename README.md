@@ -1,5 +1,5 @@
 # Cr3nroll
-Official pronounciation: *(cr-3-enroll)*, and *(cr-enroll)*</br></br>
+Pronounciation: *(Cr-3-enroll)*, or *(Cr-enroll)* [ you pick! ]</br></br>
 
 A general enrollment utility for ChromeOS</br>
 I'm going to actively maintain this with the latest public unenrollment too, and be adding more features whenever I can.</br>

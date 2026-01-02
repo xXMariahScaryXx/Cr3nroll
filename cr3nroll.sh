@@ -5,14 +5,9 @@ BROKER_PATH="broker.sh" # if you put broker in another spot, put the path here :
 BROKER_ENABLED="true" # enable or disable launching br0ker for supported versions
 
 
-# -- TESTING FLAGS :3 --
-# MILESTONE=143
-# BROKER_ENABLED="false" 
-# writeprotect=enabled
 
-# -- MAIN SCRIPT --
-tput civis
 
+# -- { DO NOT MODIFY } --
 selected_index=0
 writeprotect=$(flashrom --wp-status | grep disabled)
 factoryserial=$(vpd -i RO_VPD -g "factory_serial_number")
@@ -20,6 +15,17 @@ MILESTONE=$(cat /etc/lsb-release | grep MILESTONE | sed 's/^.*=//' )
 if [[ "$factoryserial" == "" ]]; then
 factorysaved="1"
 fi
+# -----------------------
+
+
+# -- TESTING FLAGS :3 --
+# MILESTONE=143
+# BROKER_ENABLED="false" 
+# writeprotect=enabled
+
+
+# -- MAIN SCRIPT --
+tput civis # :whale:
 
 # colors that i totally didn't steal from a previous project
 B='\033[1;36m' 
@@ -722,7 +728,7 @@ tput sc
 if [[ "$writeprotect" == *"disabled"* ]]; then
   echo -e "You currently have Firmware Write Protection set to ${R}(DISABLED)${N}, all features *should* work properly. Have fun :D"
   else
-  echo -e "You currently have Firmware Write Protection set to ${G}(ENABLED)${N}, you will be ${R}unable${N} to change your current enrollment info until you disable it!"
+  echo -e "You currently have Firmware Write Protection set to ${G}(ENABLED)${N}, you will be ${R}unable${N} to change your current enrollment info until you disable it [${G}https://crosmium.dev/FWWP${N}]!"
 fi
 if [[ "$MILESTONE" == "" ]]; then
 echo -e "${R}Could not get ChromeOS version milestone, is ChromeOS installed?${N}"

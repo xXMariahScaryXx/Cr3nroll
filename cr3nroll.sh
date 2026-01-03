@@ -520,9 +520,11 @@ if [[ "${options[$selected_index]}" == "Generate new Enrollment Keys" ]]; then
     gensdev=$(openssl rand -hex 32)
     echo -e "Generated stable_device_secret: '$gensdev'"
     sleep 0.4
-    echo -e "Would you like to have your serial number auto-generated, or make one yourself? (Y/N) [Y = Auto, N = Manual]"
-    read -r -n 1 -p "(y/n):" snauto
-    if [[ "${snauto}" == "y" ]]; then
+    echo -e "Would you like to have your serial number auto-generated, or make one yourself? (A/M) [A = Auto, M = Manual]"
+    read -r -n 1 -p "(Press A or M to continue)" snauto
+    if [[ "${snauto}" == [Aa] ]]; then
+    echo -e "\nGenerating serial number..."
+    sleep 0.67
     # super mega cool serial number generator that i made myself 
     # (google pls dont sue me i made this based on structure ive seen in SOME serial numbers)
     KEYNAME="$(
@@ -532,7 +534,6 @@ if [[ "${options[$selected_index]}" == "Generate new Enrollment Keys" ]]; then
         "$(openssl rand -base64 8 | tr -dc 'A-Z' | head -c3)" \
         "$(openssl rand -base64 8 | tr -dc 'A-Z0-9' | head -c3)"
     )"   
-    echo -e "Setting serial number to '$KEYNAME'"
     else
     echo -e "What do you want your serial number to be?"
     currentsn=$(vpd -i RO_VPD -g "serial_number")
@@ -553,11 +554,11 @@ if [[ "${options[$selected_index]}" == "Generate new Enrollment Keys" ]]; then
     }
     KEYNAMESN
     sleep 0.67
+    fi
     echo ""
     echo -e "You want your new serial number to be '$KEYNAME'?"
     echo -ne "(Y/N): "
     read SCONFIRM
-    fi
     if [[ "${SCONFIRM}" = [Yy] ]]; then
     echo -e "What would you like to name these keys? (NO SPACES)"
     SKNAME() {

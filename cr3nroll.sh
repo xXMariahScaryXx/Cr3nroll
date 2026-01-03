@@ -37,9 +37,9 @@ D='\033[1;90m'
 
 menu_reset() {
 if [[ "$factorysaved" == "1" ]]; then
-options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "Import Custom Enrollment Info${N}" "Edit Enrollment list${N}" "${B}Backup Enrollment Info${N}" "${R}Restore Enrollment Info${N}" "${G}Backup Factory Enrollment Info (Recommended)${N}" "Deprovision/Unenroll" "Exit")
+options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "${R}Import Custom Enrollment Info${N}" "Edit Enrollment list${N}" "${B}Backup Enrollment Info${N}" "${R}Restore Enrollment Info${N}" "${G}Backup Factory Enrollment Info (Recommended)${N}" "Deprovision/Unenroll" "Exit")
 else
-options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "Import Custom Enrollment Info${N}" "Edit Enrollment list${N}" "${B}Backup Enrollment Info${N}" "${R}Restore Enrollment Info${N}" "Deprovision/Unenroll" "Exit")
+options=("Save Current Enrollment Keys" "${R}Load saved Enrollment Keys${N}" "Generate new Enrollment Keys" "${R}Import Custom Enrollment Info${N}" "Edit Enrollment list${N}" "${B}Backup Enrollment Info${N}" "${R}Restore Enrollment Info${N}" "Deprovision/Unenroll" "Exit")
 fi
 if [[ "$(vpd -i RW_VPD -g "re_enrollment_key")" != "" ]]; then
 options=("Remove Quicksilver${N}")
@@ -62,6 +62,7 @@ if [[ "${options[$selected_index]}" == "Edit Enrollment list${N}" ]]; then
     echo ""
     echo ""
     echo -e "\nCurrently active serial number: '$(vpd -i RO_VPD -g "serial_number")'"
+    echo -e "Select an key to ${R}DELETE${N} from the saved enrollment keys."
     echo ""
     sleep 1
      if [[ ${#KEYNAMES[@]} -eq 0 ]]; then
@@ -86,7 +87,7 @@ if [[ "${options[$selected_index]}" == "Edit Enrollment list${N}" ]]; then
                     ;;
                 *)
                     echo -e "(Selected '$key')"
-                    echo -e "\n${R}Warning: Setting your enrollment keys is highly destructive, I recommend saving your factory ones before you select any keys.${N}\n\n(This script will attempt to back them up automatically if you haven't, but I still highly recommend doing it manually)\n"
+                    echo -e "\n${R}Warning: This will erase the selected keys from the saved enrollment keys PERMANENTLY!!${N}\n"
                     read -r -n 2 -s -p "Double click Y to continue, or hold any other key to exit..." confirmation
                     if [[ "$confirmation" != "yy" ]]; then
                     menu_reset
@@ -94,19 +95,6 @@ if [[ "${options[$selected_index]}" == "Edit Enrollment list${N}" ]]; then
                     fi
                     clear
                     menu_logo
-                    
-                    if [[ "$(vpd -i RO_VPD -g "factory_stable_device_secret")" == "" ]]; then
-                    vpd -i RO_VPD -s "factory_stable_device_secret"="$(vpd -i RO_VPD -g "stable_device_secret_DO_NOT_SHARE")"
-                    echo -e "if you see this that means that you don't have your factory SDS (stable_device_secret) backed up, It will be backed up in the next step."
-                    else
-                    echo -e "Found valid factory entry (SDS)!"
-                    fi
-                    if [[ "$(vpd -i RO_VPD -g "factory_serial_number")" == "" ]]; then
-                    vpd -i RO_VPD -s "factory_serial_number"="$(vpd -i RO_VPD -g "serial_number")"
-                    echo -e "if you see this that means that you don't have your factory SN backed up, It will be backed up in the next step."
-                    else
-                    echo -e "Found valid factory entry (SN)!"
-                    fi
                     sleep 3.4
                      overrideSet() {
         clear
@@ -150,7 +138,7 @@ echo -e "Erasing selected keys from RW_VPD..."
         done
      fi   
 fi
-if [[ "${options[$selected_index]}" == "Import Custom Enrollment Info${N}" ]]; then
+if [[ "${options[$selected_index]}" == "${R}Import Custom Enrollment Info${N}" ]]; then
 clear
 menu_logo
 echo -e "Import Custom Enrollment Info (from a file)"

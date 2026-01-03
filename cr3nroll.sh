@@ -124,9 +124,9 @@ if [[ "${options[$selected_index]}" == "Edit Enrollment list${N}" ]]; then
     sleep 2
     mapfile -t KEYNAMES < <(vpd -i RW_VPD -l | grep '"saved_' | awk -F'[ =]' '{print $1}' | awk -F_ '{print $2}' | sort -u)
 #   mapfile -t KEYNAMES < <(echo -e "saved_test" "saved_test_serial" | grep '^saved_' | awk -F'[ =]' '{print $1}' | awk -F_ '{print $2}' | sort -u)
-    echo ""
-    echo ""
-    echo -e "\nCurrently active serial number: '$(vpd -i RO_VPD -g "serial_number")'"
+    clear
+    menu_logo
+    echo -e "\n\nCurrently active serial number: '$(vpd -i RO_VPD -g "serial_number")'"
     echo -e "Select an key to ${R}DELETE${N} from the saved enrollment keys."
     echo ""
     sleep 1
@@ -152,7 +152,7 @@ if [[ "${options[$selected_index]}" == "Edit Enrollment list${N}" ]]; then
                     ;;
                 *)
                     echo -e "(Selected '$key')"
-                    echo -e "\n${R}Warning: This will erase the selected keys from the saved enrollment keys PERMANENTLY!!${N}\n"
+                    echo -e "\n${R}Warning: This will ${R}erase${N} the selected keys from the saved enrollment keys PERMANENTLY!!${N}\n"
                     read -r -n 2 -s -p "Double click Y to continue, or hold any other key to exit..." confirmation
                     if [[ "$confirmation" != "yy" ]]; then
                     menu_reset
@@ -161,10 +161,10 @@ if [[ "${options[$selected_index]}" == "Edit Enrollment list${N}" ]]; then
                     clear
                     menu_logo
                     sleep 3.4
-                     overrideSet() {
+                     overrideSet2() {
         clear
     trap 'echo -e "\nErase cancelled, no keys were deleted!" && sleep 2 && menu_reset && full_menu ' SIGINT
-    echo -e "Writing selected keys to RO_VPD in 3 seconds, press CTRL-C to cancel if you change your mind. ${R}THIS IS HIGHLY DESTRUCTIVE!!${N}"
+           echo -e "Erasing selected keys from RW_VPD in 3 seconds, press CTRL-C to cancel if you change your mind. ${R}THIS IS HIGHLY DESTRUCTIVE!!${N}"
     sleep 1.5
     clear
            echo -e "Erasing selected keys from RW_VPD in 3 seconds, press CTRL-C to cancel if you change your mind. ${R}THIS IS HIGHLY DESTRUCTIVE!!${N}"
@@ -176,11 +176,11 @@ if [[ "${options[$selected_index]}" == "Edit Enrollment list${N}" ]]; then
     sleep 1.5
         clear
            echo -e "Erasing selected keys from RW_VPD in 3 seconds, press CTRL-C to cancel if you change your mind. ${R}THIS IS HIGHLY DESTRUCTIVE!!${N}"
-    echo -e "Erasing  in: 1"
+    echo -e "Erasing in: 1"
     sleep 2
         clear
-        
-            echo -e "Writing selected keys to RO_VPD in 3 seconds, press CTRL-C to cancel if you change your mind. ${R}THIS IS HIGHLY DESTRUCTIVE!!${N}"
+
+            echo -e "Erasing selected keys from RW_VPD in 3 seconds, press CTRL-C to cancel if you change your mind. ${R}THIS IS HIGHLY DESTRUCTIVE!!${N}"
     echo -e "${R}Writing keys...${N}"
     sleep 0.8
             clear
@@ -195,7 +195,7 @@ echo -e "Erasing selected keys from RW_VPD..."
     menu_reset
     full_menu
                      }
-                    overrideSet
+                    overrideSet2
                     menu_reset
                     full_menu
                     ;;

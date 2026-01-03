@@ -6,7 +6,7 @@ I'm going to actively maintain this with the latest public unenrollment too, and
 *THIS IS A STANDALONE UTILITY, AND DOES NOT INCLUDE A SHIM*
 </br>
 </br>
-# How to implement into another project
+# How to implement into another project :D
 This is instructions on how to put Cr3nroll into something like Sh1mmer, and still keep Br0ker working!
 ## Step 1.
 get Cr3nroll</br>

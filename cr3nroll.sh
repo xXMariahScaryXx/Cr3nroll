@@ -103,9 +103,10 @@ get_fixed_dst_drive() {
 	fi
 	echo "${dev}"
 }
+CROS_DEV=$(get_largest_cros_blockdev)
 # some murkmod-esque code to get the higher priority root (which is the higher version in almost all cases)
 get_booted_kernnum() {
-    if $(expr $(cgpt show -n "$intdis" -i 2 -P) > $(cgpt show -n "$intdis" -i 4 -P)); then
+    if $(expr $(cgpt show -n "$CROS_DEV" -i 2 -P) > $(cgpt show -n "$CROS_DEV" -i 4 -P)); then
         echo -n 2
     else
         echo -n 4
@@ -115,7 +116,6 @@ get_booted_rootnum() {
   expr $(get_booted_kernnum) + 1
 }
 
-CROS_DEV=$(get_largest_cros_blockdev)
 MNT=$(mktemp -d)
 mount -o ro "$(format_part_number "$CROS_DEV" "$(get_booted_rootnum)")" "$MNT" >/dev/null 2>$1 || continue # end of stolen code!
 # we want to specifically check the higher priority (thus, higher version) root to ensure that the milestone isn't incorrectly reported 

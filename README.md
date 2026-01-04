@@ -4,8 +4,11 @@ Pronounciation: *(Cr-3-enroll)*, or *(Cr-enroll)* [ you pick! ]</br></br>
 A general enrollment utility for ChromeOS</br>
 I'm going to actively maintain this with the latest public unenrollment too, and be adding more features whenever I can.</br></br>
 *THIS IS A STANDALONE UTILITY, AND DOES NOT INCLUDE A SHIM*
-![an image of cr3nroll running](readme-assets/image1.jpeg)
+![an image of cr3nroll](readme-assets/image1.jpeg)
 *an image of Cr3nroll running on R143 [within a MacOS terminal via flags]*
+</br></br></br>
+![an image of cr3nroll running within sh1mmer](readme-assets/image2.jpg)
+*an image of Cr3nroll running within SH1MMER on a chromebook*
 </br>
 </br>
 # How to implement into another project :D

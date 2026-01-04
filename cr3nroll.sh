@@ -255,6 +255,11 @@ sleep 2
 menu_reset
 full_menu
 fi
+else
+echo -e "Declined! Returning to menu..."
+sleep 1.2
+menu_reset
+full_menu
 fi
 echo -e "Restoring factory enrollment keys..."
 sleep 1
